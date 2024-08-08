@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Data</title>
+</head>
+<body>
+    <h1>Users</h1>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Password Hash</th>
+            <th>Email</th>
+            <th>OTP</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.password_hash }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.otp }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h1>Packets</h1>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Source IP</th>
+            <th>Destination IP</th>
+            <th>Protocol</th>
+            <!-- Add more packet fields as necessary -->
+        </tr>
+        {% for packet in packets %}
+        <tr>
+            <td>{{ packet.id }}</td>
+            <td>{{ packet.src_ip }}</td>
+            <td>{{ packet.dst_ip }}</td>
+            <td>{{ packet.protocol }}</td>
+            <!-- Add more packet fields as necessary -->
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

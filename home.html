@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-right: 1rem;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        nav ul li a:hover {
+            background-color: #0056b3;
+        }
+
+        main {
+            padding: 2rem;
+        }
+
+        .content-wrapper {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group button {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group button {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .form-group button.start-capture {
+            background-color: #28a745; /* Green */
+            color: #fff;
+        }
+
+        .form-group button.stop-capture {
+            background-color: #dc3545; /* Red */
+            color: #fff;
+        }
+
+        .form-group button.start-capture:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        .form-group button.stop-capture:hover {
+            background-color: #c82333; /* Darker red on hover */
+        }
+
+        .form-group button.active {
+            opacity: 0.8; /* Slightly faded when active */
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        table th,
+        table td {
+            padding: 1rem;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .packet-details {
+            white-space: pre-wrap;
+        }
+
+        .filter-examples {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #e9ecef;
+            border-radius: 8px;
+        }
+
+        .filter-examples h3 {
+            margin-top: 0;
+        }
+
+        .flashes {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1.5rem 0;
+        }
+
+        .flashes li {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .flashes .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .flashes .danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+    </style>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const socket = io();
+
+            socket.on('packet_data', function (data) {
+                console.log('Packet data received:', data);
+                const packet = JSON.parse(data);
+                addPacketToTable(packet);
+            });
+
+            fetchStoredPackets();
+        });
+
+        function startCapture() {
+            const filter = document.getElementById('filter').value;
+            fetch('/start_capture', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filter: filter }),
+            });
+        }
+
+        function stopCapture() {
+            fetch('/stop_capture', {
+                method: 'POST',
+            });
+        }
+
+        function fetchStoredPackets() {
+            fetch('/get_packets', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(packet => {
+                    addPacketToTable(packet);
+                });
+            });
+        }
+
+        function filterPackets() {
+            const protocolFilter = document.getElementById('filter').value.toUpperCase();
+
+            const table = document.getElementById('packet-table').getElementsByTagName('tbody')[0];
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const protocolCell = rows[i].getElementsByTagName('td')[2];
+
+                const protocolMatch = protocolCell && protocolCell.textContent.toUpperCase().indexOf(protocolFilter) > -1;
+
+                if (protocolFilter === '' || protocolMatch) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+
+        function filterByIp() {
+            const ipFilterType = document.getElementById('ip-filter-type').value;
+            const ipFilterValue = document.getElementById('ip-filter').value.toUpperCase();
+
+            const table = document.getElementById('packet-table').getElementsByTagName('tbody')[0];
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const ipCell = rows[i].getElementsByTagName('td')[ipFilterType === 'src_ip' ? 0 : 1];
+
+                const ipMatch = ipCell && ipCell.textContent.toUpperCase().indexOf(ipFilterValue) > -1;
+
+                if (ipFilterValue === '' || ipMatch) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+
+        function addPacketToTable(packet) {
+            const table = document.getElementById('packet-table').getElementsByTagName('tbody')[0];
+            const row = table.insertRow();
+            const srcIpCell = row.insertCell(0);
+            const dstIpCell = row.insertCell(1);
+            const protocolCell = row.insertCell(2);
+            const detailsCell = row.insertCell(3);
+
+            srcIpCell.textContent = packet.src_ip;
+            dstIpCell.textContent = packet.dst_ip;
+            protocolCell.textContent = packet.protocol;
+            detailsCell.textContent = formatPacketDetails(packet);
+            detailsCell.classList.add('packet-details');
+        }
+
+        function formatPacketDetails(packet) {
+            let details = `### [ Ethernet ] ###\n`
+            details += `dst: ${packet.ethernet.dst}\n`
+            details += `src: ${packet.ethernet.src}\n`
+            details += `type: ${packet.ethernet.type}\n\n`
+
+            details += `### [ IP ] ###\n`
+            details += `version: ${packet.ip.version}\n`
+            details += `ihl: ${packet.ip.ihl}\n`
+            details += `tos: ${packet.ip.tos}\n`
+            details += `len: ${packet.ip.len}\n`
+            details += `id: ${packet.ip.id}\n`
+            details += `flags: ${packet.ip.flags}\n`
+            details += `frag: ${packet.ip.frag}\n`
+            details += `ttl: ${packet.ip.ttl}\n`
+            details += `proto: ${packet.ip.proto}\n`
+            details += `chksum: ${packet.ip.chksum}\n`
+            details += `src: ${packet.ip.src}\n`
+            details += `dst: ${packet.ip.dst}\n\n`
+
+            if (packet.tcp) {
+                details += `### [ TCP ] ###\n`
+                details += `sport: ${packet.tcp.sport}\n`
+                details += `dport: ${packet.tcp.dport}\n`
+                details += `seq: ${packet.tcp.seq}\n`
+                details += `ack: ${packet.tcp.ack}\n`
+                details += `dataofs: ${packet.tcp.dataofs}\n`
+                details += `reserved: ${packet.tcp.reserved}\n`
+                details += `flags: ${packet.tcp.flags}\n`
+                details += `window: ${packet.tcp.window}\n`
+                details += `chksum: ${packet.tcp.chksum}\n`
+                details += `urgptr: ${packet.tcp.urgptr}\n`
+                details += `options: ${packet.tcp.options.join(', ')}\n`
+            }
+
+            return details;
+        }
+
+        function downloadPcap() {
+            const filename = document.getElementById('filename').value || 'captured_packets.pcap';
+
+            fetch('/download_pcap', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filename: filename }),
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Error downloading file:', error));
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Advanced Network Traffic Analyzer</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('description') }}">Description</a></li>
+                <li><a href="{{ url_for('summary') }}">Summary</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="content-wrapper">
+            <h2>Network Analyzer</h2>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes">
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+            <div>
+                <form id="capture-form">
+                    <div class="form-group">
+                        <button type="button" class="start-capture" onclick="startCapture()">Start Capture</button>
+                        <button type="button" class="stop-capture" onclick="stopCapture()">Stop Capture</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter">Filter by Protocol:</label>
+                        <input type="text" id="filter" name="filter" placeholder="e.g., tcp port 80">
+                        <button type="button" onclick="filterPackets()">Apply Protocol Filter</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="ip-filter-type">Filter by IP:</label>
+                        <select id="ip-filter-type">
+                            <option value="src_ip">Source IP</option>
+                            <option value="dst_ip">Destination IP</option>
+                        </select>
+                        <input type="text" id="ip-filter" placeholder="e.g., 192.168.1.1">
+                        <button type="button" onclick="filterByIp()">Apply IP Filter</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="filename">Download Filename:</label>
+                        <input type="text" id="filename" placeholder="captured_packets.pcap">
+                        <button type="button" onclick="downloadPcap()">Download Captured Packets PCAP</button>
+                    </div>
+                </form>
+            </div>
+            <div>
+                <form action="{{ url_for('upload_pcap') }}" method="post" enctype="multipart/form-data" class="form-group">
+                    <label for="pcap_file">Upload PCAP File:</label>
+                    <input type="file" id="pcap_file" name="pcap_file">
+                    <input type="submit" value="Upload">
+                </form>
+            </div>
+            <div class="filter-examples">
+                <h3>Filter Examples:</h3>
+                <ul>
+                    <li><code>tcp port 80</code>: Capture only TCP traffic on port 80 (HTTP).</li>
+                    <li><code>udp</code>: Capture all UDP traffic.</li>
+                    <li><code>src host 192.168.1.1</code>: Capture traffic from source IP 192.168.1.1.</li>
+                    <li><code>dst host 192.168.1.105</code>: Capture traffic to destination IP 192.168.1.105.</li>
+                    <li><code>host 192.168.1.105</code>: Capture all traffic to and from IP 192.168.1.105.</li>
+                </ul>
+            </div>
+            <table id="packet-table">
+                <thead>
+                    <tr>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Protocol</th>
+                        <th>Packet Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Packet data will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

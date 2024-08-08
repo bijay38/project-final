@@ -1,0 +1,57 @@
+<!-- templates/description.html -->
+{% extends "base.html" %}
+{% block title %}Description{% endblock %}
+{% block content %}
+    
+    <section>
+        <h2>What is a Packet Sniffer?</h2>
+        <p>A packet sniffer, also known as a network analyzer, protocol analyzer, or packet analyzer, is a piece of hardware or software that intercepts and logs traffic passing over a digital network. As data streams flow back and forth over the network, the sniffer captures each packet and, if needed, decodes and analyzes its content according to the appropriate RFC or other specifications.</p>
+    </section>
+
+    <section>
+        <h2>How Does a Packet Sniffer Work?</h2>
+        <p>Packet sniffers work by intercepting data packets and logging them for analysis. This process involves several steps:</p>
+        <ol>
+            <li><strong>Packet Capture:</strong> The sniffer captures the data packets traveling over the network using the network interface card (NIC) set in promiscuous mode.</li>
+            <li><strong>Packet Filtering:</strong> It filters the captured packets based on specific criteria, such as IP address, port number, or protocol type.</li>
+            <li><strong>Packet Analysis:</strong> The filtered packets are then analyzed to extract useful information. This involves decoding the packet headers and payloads to understand the communication between network devices.</li>
+            <li><strong>Data Storage:</strong> The analyzed data can be stored in a database for further investigation and reporting.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Uses of Packet Sniffers</h2>
+        <p>Packet sniffers are used for a variety of purposes, including:</p>
+        <ul>
+            <li><strong>Network Troubleshooting:</strong> Identifying and diagnosing network issues such as latency, bottlenecks, or hardware failures.</li>
+            <li><strong>Network Security:</strong> Detecting malicious activity, such as unauthorized access, data breaches, or network attacks.</li>
+            <li><strong>Performance Monitoring:</strong> Monitoring network performance to ensure optimal operation and identifying areas for improvement.</li>
+            <li><strong>Protocol Analysis:</strong> Understanding how different network protocols function and interact with each other.</li>
+            <li><strong>Compliance:</strong> Ensuring network traffic adheres to industry standards and regulations.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Key Features of Our Packet Sniffer</h2>
+        <p>Our packet sniffer tool offers the following features:</p>
+        <ul>
+            <li><strong>Real-Time Packet Capture:</strong> Capture packets in real-time to monitor live network traffic.</li>
+            <li><strong>Advanced Filtering:</strong> Apply advanced filters to capture only the packets of interest, such as specific IP addresses, ports, or protocols.</li>
+            <li><strong>Detailed Analysis:</strong> Perform in-depth analysis of captured packets, including header and payload inspection.</li>
+            <li><strong>Data Storage:</strong> Store captured packet data in a database for historical analysis and reporting.</li>
+            <li><strong>Visualization:</strong> Visualize network traffic patterns and trends through graphical representations.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Getting Started with Our Packet Sniffer</h2>
+        <p>To start using our packet sniffer, follow these steps:</p>
+        <ol>
+            <li><strong>Login/Register:</strong> If you don't have an account, register for one. If you already have an account, log in.</li>
+            <li><strong>Start Capture:</strong> Navigate to the home page and click on the "Start Capture" button to begin capturing network packets.</li>
+            <li><strong>Stop Capture:</strong> Click on the "Stop Capture" button to end the packet capturing session.</li>
+            <li><strong>View Data:</strong> Go to the "Summary" or "View Data" pages to see the captured packet data and analyze it.</li>
+        </ol>
+    </section>
+{% endblock %}
+

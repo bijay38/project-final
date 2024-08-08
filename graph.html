@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Network Traffic Graph{% endblock %}
+
+{% block content %}
+<h2>Network Traffic Graph</h2>
+<div id="traffic-graph" style="width:100%;height:500px;"></div>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        var trafficData = {{ graph_data|tojson|safe }};
+        console.log("Traffic Data: ", trafficData);  // Debugging line to check data
+        Plotly.newPlot('traffic-graph', trafficData);
+    });
+</script>
+{% endblock %}

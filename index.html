@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Network Traffic Analyzer{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-8">
+            <h1 class="mb-4">Advanced Network Traffic Analyzer</h1>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Source IP</th>
+                            <th>Destination IP</th>
+                            <th>Protocol</th>
+                            <th>Packet Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="packet-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <h3>Packet Capture Control</h3>
+            <button class="btn btn-primary mt-3" id="start-capture">Start Capture</button>
+            <button class="btn btn-danger mt-3" id="stop-capture">Stop Capture</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('packet_data', function(packet_json) {
+            var packet = JSON.parse(packet_json);
+            
+            var details = `
+                ### [ Ethernet ] ###\n
+                dst: ${packet.ethernet.dst}\n
+                src: ${packet.ethernet.src}\n
+                type: ${packet.ethernet.type}\n
+                ### [ IP ] ###\n
+                version: ${packet.ip.version}\n
+                ihl: ${packet.ip.ihl}\n
+                tos: ${packet.ip.tos}\n
+                len: ${packet.ip.len}\n
+                id: ${packet.ip.id}\n
+                flags: ${packet.ip.flags}\n
+                frag: ${packet.ip.frag}\n
+                ttl: ${packet.ip.ttl}\n
+                proto: ${packet.ip.proto}\n
+                chksum: ${packet.ip.chksum}\n
+                src: ${packet.ip.src}\n
+                dst: ${packet.ip.dst}\n`;
+
+            if (packet.tcp) {
+                details += `
+                ### [ TCP ] ###\n
+                sport: ${packet.tcp.sport}\n
+                dport: ${packet.tcp.dport}\n
+                seq: ${packet.tcp.seq}\n
+                ack: ${packet.tcp.ack}\n
+                dataofs: ${packet.tcp.dataofs}\n
+                reserved: ${packet.tcp.reserved}\n
+                flags: ${packet.tcp.flags}\n
+                window: ${packet.tcp.window}\n
+                chksum: ${packet.tcp.chksum}\n
+                urgptr: ${packet.tcp.urgptr}\n
+                options: ${packet.tcp.options.join(', ')}\n`;
+            } else {
+                details += `No TCP layer present\n`;
+            }
+
+            var newRow = `
+                <tr>
+                    <td>${packet.src_ip}</td>
+                    <td>${packet.dst_ip}</td>
+                    <td>${packet.protocol}</td>
+                    <td><div class="packet-details">${details}</div></td>
+                </tr>`;
+                
+            $('#packet-table-body').prepend(newRow);
+        });
+
+        $('#start-capture').click(function() {
+            $.post('/start_capture', function(data) {
+                console.log(data);
+            });
+        });
+
+        $('#stop-capture').click(function() {
+            $.post('/stop_capture', function(data) {
+                console.log(data);
+            });
+        });
+    </script>
+{% endblock %}

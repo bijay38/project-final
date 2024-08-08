@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Summary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Packet Summary</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Source IP</th>
+                <th>Destination IP</th>
+                <th>Protocol</th>
+                <th>Ethernet Source</th>
+                <th>Ethernet Destination</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for packet in packets %}
+                <tr>
+                    <td>{{ packet.id }}</td>
+                    <td>{{ packet.src_ip }}</td>
+                    <td>{{ packet.dst_ip }}</td>
+                    <td>{{ packet.protocol }}</td>
+                    <td>{{ packet.ethernet_src }}</td>
+                    <td>{{ packet.ethernet_dst }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('summary', page=pagination.prev_num) }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% for page_num in pagination.iter_pages() %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('summary', page=page_num) }}">{{ page_num }}</a>
+                </li>
+            {% endfor %}
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('summary', page=pagination.next_num) }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endblock %}
